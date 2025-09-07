@@ -1,0 +1,14 @@
+keys:
+  - &yubikey E6028682743BF174D2E5B3AF92810374E3AC1EE1
+  - &zenbook age193k5w8099pvytvsdadzt9jauqncvh25ewchpjw3yw7rdw0egr3lqa2fw29
+  - &lenovo age18r0wurlv7f9mdxhvd5w2fdu8e9m5vyxt5c2adkn8xkhs6nt7de9qx6gdl3
+  - &pi age1pffk3zqh8kpl2gn0aarw7zqv5q2dh9zvgd5jrj5natxnvyukkdeq0qtgw3
+creation_rules:
+  - path_regex: secrets/[^/]+\.(yaml|json|env|ini)$
+    key_groups:
+      - pgp:
+        - *yubikey # This is used to edit file, the others are for deployment
+        age:
+        - *zenbook
+        - *lenovo
+        - *pi
