@@ -81,7 +81,6 @@
     pam_u2f # General purpose pam u2f. Enough for yubikey 2fa
     yubikey-manager # Yubikey management tool - ykman
     yubikey-personalization
-    nfs-utils # NFS client utilities. Required for k3s longhorn RWX volumes
   ];
 
   # Enable the OpenSSH daemon.

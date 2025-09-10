@@ -15,30 +15,28 @@
     sops-nix,
     flake-utils,
     ...
-  } @ inputs:
-    flake-utils.lib.eachDefaultSystem (system: let
-      pkgs = import nixpkgs {inherit system;};
-      nodes = [
-        {
-          hostname = "homelab-zenbook";
-          ssh_hostname = "10.0.0.8";
-          system = "x86_64-linux";
-          role = "server";
-        }
-        {
-          hostname = "homelab-pi";
-          ssh_hostname = "10.0.0.6";
-          system = "aarch64-linux";
-          role = "agent";
-        }
-      ];
-    in {
+  }: let
+    nodes = [
+      {
+        hostname = "homelab-zenbook";
+        ssh_hostname = "10.0.0.8";
+        system = "x86_64-linux";
+        role = "server";
+      }
+      {
+        hostname = "homelab-pi";
+        ssh_hostname = "10.0.0.6";
+        system = "aarch64-linux";
+        role = "agent";
+      }
+    ];
+  in
+    {
+      # --- Top-level nixosConfigurations ---
       nixosConfigurations = builtins.listToAttrs (map (node: {
           name = node.hostname;
-          value = pkgs.lib.nixosSystem {
-            specialArgs = {
-              meta = node;
-            };
+          value = nixpkgs.lib.nixosSystem {
+            specialArgs = {meta = node;};
             system = node.system;
             modules = [
               ./options.nix
@@ -50,6 +48,7 @@
         })
         nodes);
 
+      # --- Top-level deploy-rs config ---
       deploy.nodes = builtins.listToAttrs (map (node: {
           name = node.hostname;
           value = {
@@ -59,15 +58,20 @@
             fastConnection = true;
             profiles.system = {
               user = "root";
-              path = deploy-rs.lib.${node.system}.activate.nixos self.nixosConfigurations."${node.hostname}";
+              path =
+                deploy-rs.lib.${node.system}.activate.nixos
+                self.nixosConfigurations.${node.hostname};
             };
           };
         })
         nodes);
-
+    }
+    # --- System-dependent outputs ---
+    // flake-utils.lib.eachDefaultSystem (system: let
+      pkgs = import nixpkgs {inherit system;};
+    in {
       devShell = pkgs.mkShell {
-        buildInputs = with pkgs; [
-          # deploy-rs
+        buildInputs = [
           deploy-rs.packages.${system}.deploy-rs
         ];
       };
