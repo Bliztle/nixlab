@@ -1,4 +1,5 @@
-{...}: {
+{ ... }:
+{
   imports = [
     ./hardware-configuration.nix
   ];
@@ -11,6 +12,7 @@
 
   # Options
   custom.laptop = true;
+  custom.media = true;
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions

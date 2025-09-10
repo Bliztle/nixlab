@@ -4,12 +4,14 @@
   # lib,
   # config,
   ...
-}: {
+}:
+{
   imports = [
     ./modules/neovim.nix
     ./modules/sops.nix
     ./modules/shell.nix
     ./modules/laptop.nix
+    ./modules/media.nix
   ];
 
   security.sudo.wheelNeedsPassword = false; # Replace this with sudo-over-ssh
@@ -55,8 +57,11 @@
   users.users.nixos = {
     isNormalUser = true;
     description = "nixos";
-    extraGroups = ["networkmanager" "wheel"];
-    packages = with pkgs; [];
+    extraGroups = [
+      "networkmanager"
+      "wheel"
+    ];
+    packages = with pkgs; [ ];
     openssh.authorizedKeys.keys = [
       # Added this as deployment prompts yubikey 4 times per host
       # # # NVM, HAVING SSH CONFIGURED TO CONFIRM MEANS IT PROMPTS FOR ANY KEY
