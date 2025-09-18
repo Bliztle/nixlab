@@ -11,10 +11,12 @@
     ./modules/sops.nix
     ./modules/shell.nix
     ./modules/laptop.nix
-    ./modules/media.nix
+    ./modules/services.nix
   ];
 
   security.sudo.wheelNeedsPassword = false; # Replace this with sudo-over-ssh
+
+  programs.nix-ld.enable = true; # Allow dynamic linking of nix packages
 
   networking.hostName = meta.hostname; # Define your hostname.
 
@@ -60,6 +62,7 @@
     extraGroups = [
       "networkmanager"
       "wheel"
+      "media"
     ];
     packages = with pkgs; [ ];
     openssh.authorizedKeys.keys = [
