@@ -33,15 +33,21 @@ lib.mkIf config.custom.media {
     openDefaultPorts = true;
     settings = {
       devices.framework = {
-        autoAcceptFolders = true;
         id = "7VE4AEN-CYY4UKI-R7GH3BB-PJOVQEB-JE5EDRT-L2JPWSB-RT3VEWT-ZOFYVQA";
+        autoAcceptFolders = true;
+      };
+
+      devices.omen = {
+        id = "MXOAWAD-CX3FCZK-RRVNVZZ-PJYAJAS-NH3FRPQ-NJGEO3X-XG6KWWY-26G6YAC"; # Replace with actual device ID
+        autoAcceptFolders = true;
       };
 
       folders."uni" = {
-        devices = [ "framework" ];
+        devices = [ "framework" "omen" ];
         versioning.type = "simple";
         path = "${syncDir}/uni";
       };
+
       options.urAccepted = -1;
     };
   };
