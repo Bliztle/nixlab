@@ -2,7 +2,7 @@
   description = "Homelab NixOS Flake shared across all homelab devices";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     deploy-rs.url = "github:serokell/deploy-rs";
     sops-nix.url = "github:Mic92/sops-nix";
     flake-utils.url = "github:numtide/flake-utils";

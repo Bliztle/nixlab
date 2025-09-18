@@ -6,9 +6,11 @@
 lib.mkIf config.custom.laptop {
   # Power management
   services.logind = {
-    lidSwitch = "ignore";
-    lidSwitchDocked = "ignore";
-    lidSwitchExternalPower = "ignore";
+    settings.Login = {
+      HandleLidSwitch = "ignore";
+      HandleLidSwitchDocked = "ignore";
+      HandleLidSwitchExternalPower = "ignore";
+    };
   };
 
   # Minimise powerusage in all situations, as performance is of no importance at the moment

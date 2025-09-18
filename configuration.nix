@@ -104,6 +104,7 @@
     53 # DNS
     80 # HTTP
     443 # HTTPS
+    8384 # Syncthing
   ];
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;
