@@ -38,7 +38,7 @@ lib.mkIf config.custom.media {
       };
 
       devices.omen = {
-        id = "MXOAWAD-CX3FCZK-RRVNVZZ-PJYAJAS-NH3FRPQ-NJGEO3X-XG6KWWY-26G6YAC"; # Replace with actual device ID
+        id = "MXOAWAD-CX3FCZK-RRVNVZZ-PJYAJAS-NH3FRPQ-NJGEO3X-XG6KWWY-26G6YAC";
         autoAcceptFolders = true;
       };
 
