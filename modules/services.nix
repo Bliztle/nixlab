@@ -54,7 +54,10 @@ lib.mkIf config.custom.media {
       };
 
       folders."uni" = {
-        devices = [ "framework" "omen" ];
+        devices = [
+          "framework"
+          "omen"
+        ];
         versioning.type = "simple";
         path = "${syncDir}/uni";
       };
