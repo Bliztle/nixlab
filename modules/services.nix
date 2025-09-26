@@ -10,16 +10,27 @@ let
   syncDir = "${hdd}/syncthing";
 in
 lib.mkIf config.custom.media {
+  users.groups.media = { };
 
-  services.jellyfin.enable = true;
+  systemd.tmpfiles.rules = [
+    # Ensure media is readable, and fully accessible by the media group
+    "d ${mediaDir}/media 2775 nixos media -"
+  ];
+
+  services.jellyfin = {
+    enable = true;
+    group = "media";
+  };
 
   services.audiobookshelf = {
     enable = true;
     port = 8083;
+    group = "media";
   };
 
   services.filebrowser = {
     enable = true;
+    group = "media";
     settings = {
       port = 8084;
       root = "${mediaDir}/media";
