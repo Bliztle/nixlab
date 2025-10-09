@@ -1,5 +1,4 @@
 {
-  pkgs,
   lib,
   config,
   ...
@@ -53,13 +52,23 @@ lib.mkIf config.custom.media {
         autoAcceptFolders = true;
       };
 
-      folders."uni" = {
-        devices = [
-          "framework"
-          "omen"
-        ];
-        versioning.type = "simple";
-        path = "${syncDir}/uni";
+      folders = {
+        "uni" = {
+          devices = [
+            "framework"
+            "omen"
+          ];
+          versioning.type = "simple";
+          path = "${syncDir}/uni";
+        };
+        "synced" = {
+          devices = [
+            "framework"
+            "omen"
+          ];
+          versioning.type = "simple";
+          path = "${syncDir}/synced";
+        };
       };
 
       options.urAccepted = -1;
