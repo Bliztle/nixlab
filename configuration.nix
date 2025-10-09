@@ -12,6 +12,7 @@
     ./modules/shell.nix
     ./modules/laptop.nix
     ./modules/services.nix
+    ./modules/wireguard.nix
   ];
 
   security.sudo.wheelNeedsPassword = false; # Replace this with sudo-over-ssh
@@ -90,6 +91,8 @@
     pam_u2f # General purpose pam u2f. Enough for yubikey 2fa
     yubikey-manager # Yubikey management tool - ykman
     yubikey-personalization
+    wireguard-tools
+    tcpdump
   ];
 
   # Enable the OpenSSH daemon.

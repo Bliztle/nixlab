@@ -66,6 +66,13 @@ lib.mkIf config.custom.media {
     };
   };
 
+  services.ddns-updater = {
+    enable = true;
+    environment = {
+      CONFIG_FILEPATH = "/etc/ddns-updater/config.json";
+    };
+  };
+
   services.nginx = {
     enable = true;
     defaultHTTPListenPort = 80;
@@ -91,6 +98,12 @@ lib.mkIf config.custom.media {
           proxyWebsockets = true;
         };
       };
+      "jellyfin.internal.bliztle.com" = {
+        locations."/" = {
+          proxyPass = "http://localhost:8096";
+          proxyWebsockets = true;
+        };
+      };
       "audiobookshelf.bliztle.com" = {
         enableACME = true;
         forceSSL = true;
@@ -100,17 +113,21 @@ lib.mkIf config.custom.media {
         };
       };
       "files.internal.bliztle.com" = {
-        # Allow only local network access
-        listen = [
-          {
-            addr = "10.0.0.8";
-            port = 80;
-            ssl = false;
-          }
-        ];
         locations."/" = {
           proxyPass = "http://localhost:8084";
           proxyWebsockets = true;
+          # Allow only local network access
+          extraConfig = ''
+            allow 10.0.0.0/24;
+            deny all;
+          '';
+        };
+      };
+      "ddns.internal.bliztle.com" = {
+        locations."/" = {
+          proxyPass = "http://localhost:8000";
+          proxyWebsockets = true;
+          # Allow only local network access
           extraConfig = ''
             allow 10.0.0.0/24;
             deny all;

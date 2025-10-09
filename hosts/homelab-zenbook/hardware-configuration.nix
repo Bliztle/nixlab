@@ -11,7 +11,7 @@
     (modulesPath + "/installer/scan/not-detected.nix")
   ];
   boot = {
-    kernelModules = ["kvm-intel"];
+    kernelModules = ["kvm-intel" "wireguard"];
     extraModulePackages = [];
     initrd = {
       availableKernelModules = ["xhci_pci" "uas" "thunderbolt" "vmd" "nvme" "usb_storage" "sd_mod" "rtsx_pci_sdmmc"];

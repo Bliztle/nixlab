@@ -1,11 +1,25 @@
-{...}: {
+{ meta, lib, ... }:
+{
   sops = {
     defaultSopsFile = ../secrets/secrets.yaml;
 
-    secrets.wg0_pi_public = {};
-    secrets.wg0_pi_private = {};
-    secrets.wg0_lenovo_public = {};
-    secrets.wg0_lenovo_private = {};
+    secrets.wg0_pi_public = { };
+    secrets.wg0_pi_private = { };
+    secrets.wg0_lenovo_public = { };
+    secrets.wg0_lenovo_private = { };
+
+    secrets.wg_zenbook_mullvad_dk_private = lib.mkIf (meta.hostname == "homelab-zenbook") { };
+    secrets.wg_zenbook_mullvad_dk = lib.mkIf (meta.hostname == "homelab-zenbook") {
+      mode = "600";
+      path = "/etc/wireguard/wg-mullvad-dk.conf";
+    };
+
+    secrets.ddns-updater-config = {
+      # TODO: Fix this before someone overtakes this subdomain lol
+      # Currently all processes can read this file
+      mode = "666";
+      path = "/etc/ddns-updater/config.json";
+    };
 
     # secrets.luks_cryptbay = {
     # This puts the secret where initrd can find it
