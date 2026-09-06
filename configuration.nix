@@ -87,7 +87,6 @@
     btop
     git
     cryptsetup
-    yubioath-flutter # 2FA gui for getting keys
     pam_u2f # General purpose pam u2f. Enough for yubikey 2fa
     yubikey-manager # Yubikey management tool - ykman
     yubikey-personalization

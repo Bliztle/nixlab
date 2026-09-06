@@ -38,15 +38,16 @@ nix eval --raw .#nixosConfigurations.homelab-zenbook.config.system.build.topleve
 nix eval --raw .#nixosConfigurations.homelab-pi.config.system.build.toplevel.drvPath
 ```
 
-The development shell is currently known to be broken, so use temporary shells for quality tools until that issue is fixed:
+The development shell provides deployment, secret-management, formatting, and static-analysis tools:
 
 ```bash
-nix shell nixpkgs#alejandra --command alejandra --check .
-nix shell nixpkgs#statix --command statix check .
-nix shell nixpkgs#deadnix --command deadnix --fail .
+nix develop
+alejandra --check .
+statix check .
+deadnix --fail .
 ```
 
-Some validation and quality commands have existing failures documented in the README. Report whether a change introduces new failures; do not reformat or clean unrelated files unless asked. A generic `nix flake check --no-build` is shallower than evaluating each system derivation, so do not use it as the sole proof of cross-host validity.
+Some quality commands have existing failures documented in the README. Report whether a change introduces new failures; do not reformat or clean unrelated files unless asked. A generic `nix flake check --no-build` is shallower than evaluating each system derivation, so do not use it as the sole proof of cross-host validity.
 
 ## Safety boundaries
 

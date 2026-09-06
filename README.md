@@ -15,15 +15,13 @@ The Zenbook currently serves Jellyfin, Audiobookshelf, File Browser, Syncthing, 
 
 ## Working with the flake
 
-Enter the development environment with:
+Enter the development environment, which provides deploy-rs, SOPS, Alejandra, Statix, and Deadnix:
 
 ```bash
 direnv allow
 # or
 nix develop
 ```
-
-The development shell is currently known to be broken. Until it is repaired, individual tools can be run with `nix shell`.
 
 Evaluate the flake and both NixOS configurations without building:
 
@@ -33,14 +31,14 @@ nix eval --raw .#nixosConfigurations.homelab-zenbook.config.system.build.topleve
 nix eval --raw .#nixosConfigurations.homelab-pi.config.system.build.toplevel.drvPath
 ```
 
-The explicit derivation evaluations are important: the generic flake check performs a shallower check and can pass even when constructing a host's top-level derivation fails. See the current Pi failure below.
+The explicit derivation evaluations are important: the generic flake check performs a shallower check and can pass even when constructing a host's top-level derivation fails.
 
 Check formatting and run advisory static analysis:
 
 ```bash
-nix shell nixpkgs#alejandra --command alejandra --check .
-nix shell nixpkgs#statix --command statix check .
-nix shell nixpkgs#deadnix --command deadnix --fail .
+alejandra --check .
+statix check .
+deadnix --fail .
 ```
 
 Deployment is intentionally manual. The normal command is:
@@ -61,12 +59,9 @@ When configuration needs a new secret, add or review the non-secret SOPS wiring 
 
 This is a living register, not a claim that every item should be fixed immediately. Changes that resolve an item should update or remove it here; newly confirmed out-of-scope findings should be added without silently fixing them.
 
-- The development shell is known to be broken; its exact root cause still needs diagnosis.
-- The current uncommitted lock-file update did not repair the development shell and causes full Pi derivation evaluation to fail because `aapt` is unsupported on `aarch64-linux`. The same Pi evaluation succeeds at committed `HEAD`, so this is specifically a consequence of the experimental lock update.
-- The flake exposes the deprecated singular `devShell` output rather than `devShells.<system>.default`.
 - `nix flake check` warns that the deploy-rs `deploy` output is unknown to the generic flake checker.
 - Alejandra currently reports formatting changes needed in five files: `configuration.nix`, `options.nix`, `modules/neovim.nix`, `modules/wireguard.nix`, and the Pi hardware configuration.
-- Statix reports existing style warnings, primarily repeated dotted attribute keys, empty argument patterns, and an assignment that could use `inherit`.
+- Statix reports existing style warnings, primarily repeated dotted attribute keys and empty argument patterns.
 - Deadnix reports unused arguments in the inactive WireGuard module and the generated Pi hardware configuration.
 - `custom.wireguard = true` on the Pi currently has no effect because the WireGuard implementation is commented out.
 - The DDNS updater secret is installed with mode `0666`, making it readable and writable by every local user and process.
