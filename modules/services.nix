@@ -2,143 +2,144 @@
   lib,
   config,
   ...
-}: let
+}:
+let
   hdd = "/mnt/hdd_storage_01";
   mediaDir = "${hdd}/media";
   syncDir = "${hdd}/syncthing";
 in
-  lib.mkIf config.custom.media {
-    users.groups.media = {};
+lib.mkIf config.custom.media {
+  users.groups.media = { };
 
-    systemd.tmpfiles.rules = [
-      # Ensure media is readable, and fully accessible by the media group
-      "d ${mediaDir}/media 2775 nixos media -"
-    ];
+  systemd.tmpfiles.rules = [
+    # Ensure media is readable, and fully accessible by the media group
+    "d ${mediaDir}/media 2775 nixos media -"
+  ];
 
-    services.jellyfin = {
-      enable = true;
-      group = "media";
+  services.jellyfin = {
+    enable = true;
+    group = "media";
+  };
+
+  services.audiobookshelf = {
+    enable = true;
+    port = 8083;
+    group = "media";
+  };
+
+  services.filebrowser = {
+    enable = true;
+    group = "media";
+    settings = {
+      port = 8084;
+      root = "${mediaDir}/media";
     };
+  };
 
-    services.audiobookshelf = {
-      enable = true;
-      port = 8083;
-      group = "media";
-    };
-
-    services.filebrowser = {
-      enable = true;
-      group = "media";
-      settings = {
-        port = 8084;
-        root = "${mediaDir}/media";
+  services.syncthing = {
+    enable = true;
+    dataDir = "${syncDir}";
+    guiAddress = "0.0.0.0:8384"; # Default
+    openDefaultPorts = true;
+    settings = {
+      devices.framework = {
+        id = "IQBW5LI-UQWXOZ4-6KDYZPL-MP3JAPC-K564QH3-CT3WSTP-TORAEQ4-FCMLLA2";
+        autoAcceptFolders = true;
       };
-    };
 
-    services.syncthing = {
-      enable = true;
-      dataDir = "${syncDir}";
-      guiAddress = "0.0.0.0:8384"; # Default
-      openDefaultPorts = true;
-      settings = {
-        devices.framework = {
-          id = "7VE4AEN-CYY4UKI-R7GH3BB-PJOVQEB-JE5EDRT-L2JPWSB-RT3VEWT-ZOFYVQA";
-          autoAcceptFolders = true;
-        };
-
-        devices.omen = {
-          id = "MXOAWAD-CX3FCZK-RRVNVZZ-PJYAJAS-NH3FRPQ-NJGEO3X-XG6KWWY-26G6YAC";
-          autoAcceptFolders = true;
-        };
-
-        folders = {
-          "synced" = {
-            devices = [
-              "framework"
-              "omen"
-            ];
-            versioning.type = "simple";
-            path = "${syncDir}/synced";
-          };
-        };
-
-        options.urAccepted = -1;
+      devices.omen = {
+        id = "MXOAWAD-CX3FCZK-RRVNVZZ-PJYAJAS-NH3FRPQ-NJGEO3X-XG6KWWY-26G6YAC";
+        autoAcceptFolders = true;
       };
-    };
 
-    services.ddns-updater = {
-      enable = true;
-      environment = {
-        CONFIG_FILEPATH = "/etc/ddns-updater/config.json";
-      };
-    };
-
-    services.nginx = {
-      enable = true;
-      defaultHTTPListenPort = 80;
-      defaultSSLListenPort = 443;
-      recommendedGzipSettings = true;
-      recommendedProxySettings = true;
-      recommendedTlsSettings = true;
-      recommendedOptimisation = true;
-      virtualHosts = {
-        "home.bliztle.com" = {
-          default = true;
-          enableACME = true;
-          forceSSL = true;
-          locations."/" = {
-            return = 404;
-          };
-        };
-        "jellyfin.bliztle.com" = {
-          enableACME = true;
-          forceSSL = true;
-          locations."/" = {
-            proxyPass = "http://localhost:8096";
-            proxyWebsockets = true;
-          };
-        };
-        "jellyfin.internal.bliztle.com" = {
-          locations."/" = {
-            proxyPass = "http://localhost:8096";
-            proxyWebsockets = true;
-          };
-        };
-        "audiobookshelf.bliztle.com" = {
-          enableACME = true;
-          forceSSL = true;
-          locations."/" = {
-            proxyPass = "http://localhost:8083";
-            proxyWebsockets = true;
-          };
-        };
-        "files.internal.bliztle.com" = {
-          locations."/" = {
-            proxyPass = "http://localhost:8084";
-            proxyWebsockets = true;
-            # Allow only local network access
-            extraConfig = ''
-              allow 10.0.0.0/24;
-              deny all;
-            '';
-          };
-        };
-        "ddns.internal.bliztle.com" = {
-          locations."/" = {
-            proxyPass = "http://localhost:8000";
-            proxyWebsockets = true;
-            # Allow only local network access
-            extraConfig = ''
-              allow 10.0.0.0/24;
-              deny all;
-            '';
-          };
+      folders = {
+        "synced" = {
+          devices = [
+            "framework"
+            "omen"
+          ];
+          versioning.type = "simple";
+          path = "${syncDir}/synced";
         };
       };
-    };
 
-    security.acme = {
-      acceptTerms = true;
-      defaults.email = "mail+acme@bliztle.com";
+      options.urAccepted = -1;
     };
-  }
+  };
+
+  services.ddns-updater = {
+    enable = true;
+    environment = {
+      CONFIG_FILEPATH = "/etc/ddns-updater/config.json";
+    };
+  };
+
+  services.nginx = {
+    enable = true;
+    defaultHTTPListenPort = 80;
+    defaultSSLListenPort = 443;
+    recommendedGzipSettings = true;
+    recommendedProxySettings = true;
+    recommendedTlsSettings = true;
+    recommendedOptimisation = true;
+    virtualHosts = {
+      "home.bliztle.com" = {
+        default = true;
+        enableACME = true;
+        forceSSL = true;
+        locations."/" = {
+          return = 404;
+        };
+      };
+      "jellyfin.bliztle.com" = {
+        enableACME = true;
+        forceSSL = true;
+        locations."/" = {
+          proxyPass = "http://localhost:8096";
+          proxyWebsockets = true;
+        };
+      };
+      "jellyfin.internal.bliztle.com" = {
+        locations."/" = {
+          proxyPass = "http://localhost:8096";
+          proxyWebsockets = true;
+        };
+      };
+      "audiobookshelf.bliztle.com" = {
+        enableACME = true;
+        forceSSL = true;
+        locations."/" = {
+          proxyPass = "http://localhost:8083";
+          proxyWebsockets = true;
+        };
+      };
+      "files.internal.bliztle.com" = {
+        locations."/" = {
+          proxyPass = "http://localhost:8084";
+          proxyWebsockets = true;
+          # Allow only local network access
+          extraConfig = ''
+            allow 10.0.0.0/24;
+            deny all;
+          '';
+        };
+      };
+      "ddns.internal.bliztle.com" = {
+        locations."/" = {
+          proxyPass = "http://localhost:8000";
+          proxyWebsockets = true;
+          # Allow only local network access
+          extraConfig = ''
+            allow 10.0.0.0/24;
+            deny all;
+          '';
+        };
+      };
+    };
+  };
+
+  security.acme = {
+    acceptTerms = true;
+    defaults.email = "mail+acme@bliztle.com";
+  };
+}

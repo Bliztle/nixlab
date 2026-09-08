@@ -49,6 +49,8 @@ deploy .#homelab-zenbook
 
 deploy-rs is configured with `remoteBuild = true`, so the target performs the build. The Pi must not be deployed merely because it remains declared in the flake.
 
+Deployment preflight checks run locally. Each architecture's checks include only matching hosts, so checking the Zenbook from an x86 laptop does not require building the ARM Pi configuration.
+
 ## Secrets
 
 Secrets are encrypted in `secrets/secrets.yaml` with SOPS. Recipient policy is defined in `.sops.yaml`, and `modules/sops.nix` maps encrypted keys to runtime files. Secret editing is deliberately a manual owner task; automated agents must not decrypt, print, edit, generate, or re-encrypt secret values.

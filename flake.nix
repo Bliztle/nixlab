@@ -20,41 +20,43 @@
     };
   };
 
-  outputs = {
-    self,
-    nixpkgs,
-    deploy-rs,
-    sops-nix,
-    apcoabot,
-    ...
-  }: let
-    nodes = [
-      {
-        hostname = "homelab-zenbook";
-        ssh_hostname = "10.0.0.8";
-        system = "x86_64-linux";
-        role = "server";
-      }
-      {
-        hostname = "homelab-pi";
-        ssh_hostname = "10.0.0.6";
-        system = "aarch64-linux";
-        role = "agent";
-      }
-    ];
-    systems = nixpkgs.lib.unique (map (node: node.system) nodes);
-  in {
-    # --- Top-level nixosConfigurations ---
-    nixosConfigurations = builtins.listToAttrs (
-      map (node: {
-        name = node.hostname;
-        value = nixpkgs.lib.nixosSystem {
-          specialArgs = {
-            meta = node;
-          };
-          inherit (node) system;
-          modules =
-            [
+  outputs =
+    {
+      self,
+      nixpkgs,
+      deploy-rs,
+      sops-nix,
+      apcoabot,
+      ...
+    }:
+    let
+      nodes = [
+        {
+          hostname = "homelab-zenbook";
+          ssh_hostname = "10.0.0.8";
+          system = "x86_64-linux";
+          role = "server";
+        }
+        {
+          hostname = "homelab-pi";
+          ssh_hostname = "10.0.0.6";
+          system = "aarch64-linux";
+          role = "agent";
+        }
+      ];
+      systems = nixpkgs.lib.unique (map (node: node.system) nodes);
+    in
+    {
+      # --- Top-level nixosConfigurations ---
+      nixosConfigurations = builtins.listToAttrs (
+        map (node: {
+          name = node.hostname;
+          value = nixpkgs.lib.nixosSystem {
+            specialArgs = {
+              meta = node;
+            };
+            inherit (node) system;
+            modules = [
               ./options.nix
               ./hosts/${node.hostname}/configuration.nix
               ./configuration.nix
@@ -63,53 +65,60 @@
             ++ nixpkgs.lib.optionals (node.hostname == "homelab-zenbook") [
               apcoabot.nixosModules.default
             ];
-        };
-      })
-      nodes
-    );
-
-    # --- Top-level deploy-rs config ---
-    deploy.nodes = builtins.listToAttrs (
-      map (node: {
-        name = node.hostname;
-        value = {
-          hostname = node.ssh_hostname;
-          sshUser = "nixos";
-          remoteBuild = true;
-          fastConnection = true;
-          profiles.system = {
-            user = "root";
-            path = deploy-rs.lib.${node.system}.activate.nixos self.nixosConfigurations.${node.hostname};
           };
-        };
-      })
-      nodes
-    );
+        }) nodes
+      );
 
-    # Validate the deploy-rs schema and activation paths with `nix flake check`.
-    checks = nixpkgs.lib.genAttrs systems (
-      system: deploy-rs.lib.${system}.deployChecks self.deploy
-    );
+      # --- Top-level deploy-rs config ---
+      deploy.nodes = builtins.listToAttrs (
+        map (node: {
+          name = node.hostname;
+          value = {
+            hostname = node.ssh_hostname;
+            sshUser = "nixos";
+            remoteBuild = true;
+            fastConnection = true;
+            profiles.system = {
+              user = "root";
+              path = deploy-rs.lib.${node.system}.activate.nixos self.nixosConfigurations.${node.hostname};
+            };
+          };
+        }) nodes
+      );
 
-    # Development tooling is available for every architecture in the host inventory.
-    devShells = nixpkgs.lib.genAttrs systems (
-      system: let
-        pkgs = nixpkgs.legacyPackages.${system};
-      in {
-        default = pkgs.mkShell {
-          packages = [
-            pkgs.alejandra
-            pkgs.deadnix
-            pkgs.deploy-rs
-            pkgs.sops
-            pkgs.statix
-          ];
-        };
-      }
-    );
+      # A flake update caused this to require an explicit filter.
+      # Otherwise it tried to build with both system architectures and failed.
+      checks = nixpkgs.lib.genAttrs systems (
+        system:
+        deploy-rs.lib.${system}.deployChecks (
+          self.deploy
+          // {
+            nodes = nixpkgs.lib.filterAttrs (
+              name: _: self.nixosConfigurations.${name}.pkgs.stdenv.hostPlatform.system == system
+            ) self.deploy.nodes;
+          }
+        )
+      );
 
-    formatter = nixpkgs.lib.genAttrs systems (
-      system: nixpkgs.legacyPackages.${system}.alejandra
-    );
-  };
+      # Development tooling is available for every architecture in the host inventory.
+      devShells = nixpkgs.lib.genAttrs systems (
+        system:
+        let
+          pkgs = nixpkgs.legacyPackages.${system};
+        in
+        {
+          default = pkgs.mkShell {
+            packages = [
+              pkgs.alejandra
+              pkgs.deadnix
+              pkgs.deploy-rs
+              pkgs.sops
+              pkgs.statix
+            ];
+          };
+        }
+      );
+
+      formatter = nixpkgs.lib.genAttrs systems (system: nixpkgs.legacyPackages.${system}.alejandra);
+    };
 }
