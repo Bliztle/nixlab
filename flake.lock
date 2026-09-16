@@ -8,11 +8,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1765152321,
-        "narHash": "sha256-Lm9ELtR5de4T61P/8IyfkjaJuQgNYlTXjbqhd8F+5eo=",
+        "lastModified": 1789682934,
+        "narHash": "sha256-LPC7qR+B+S4TNhIxIltPOmSekX82sRjr76G7ZXzBk8I=",
         "owner": "Bliztle",
         "repo": "apcoabot",
-        "rev": "71ffff060453970c240ea0fce84847deec401268",
+        "rev": "c21f22469aa3e87ffa804ed9e55a2213e5ff0f56",
         "type": "github"
       },
       "original": {
