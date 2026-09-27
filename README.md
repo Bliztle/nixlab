@@ -175,6 +175,24 @@ Use each app's connection-test buttons to verify the integrations, then test a
 download/import and a subtitle write. Local evaluation cannot verify these live
 connections or provider credentials.
 
+### FlareSolverr for Prowlarr
+
+The Zenbook enables `services.flaresolverr.enable`. FlareSolverr listens only on
+`127.0.0.1:8191`, uses the host's normal connection, and has no nginx entry or
+firewall opening. It does not need a DNS record. The Pi leaves it disabled.
+
+After deployment, check `sudo systemctl status flaresolverr` and
+`curl http://127.0.0.1:8191/` on the server. In Prowlarr, open
+Settings → Indexers → Indexer Proxies → Add → FlareSolverr. Set the host URL to
+`http://127.0.0.1:8191`, add the tag `flaresolverr`, then Test and Save. Add the same
+tag to the indexers that need it on the main Indexers page. Prowlarr uses this
+proxy when it detects Cloudflare protection on an indexer with a matching tag;
+without matching tags the proxy is disabled. A successful proxy test confirms
+connectivity, but does not guarantee every indexer's challenge can be solved.
+
+See the [Prowlarr proxy documentation](https://wiki.servarr.com/prowlarr/settings#indexer-proxies)
+and [FlareSolverr documentation](https://github.com/FlareSolverr/FlareSolverr).
+
 ## Known issues and debt
 
 This is a living register, not a claim that every item should be fixed immediately. Changes that resolve an item should update or remove it here; newly confirmed out-of-scope findings should be added without silently fixing them.

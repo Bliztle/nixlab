@@ -85,6 +85,7 @@
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
+    kitty.terminfo # Recognize xterm-kitty in SSH sessions, including sudo and pagers.
     btop
     git
     cryptsetup

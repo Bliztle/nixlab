@@ -18,6 +18,7 @@
     radarr.enable = true;
     sonarr.enable = true;
     prowlarr.enable = true;
+    flaresolverr.enable = true;
     bazarr.enable = true;
     seerr.enable = true;
 

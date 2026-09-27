@@ -54,11 +54,19 @@ in {
   };
 
   systemd = {
-    services = lib.genAttrs mediaWriters (_: {
-      unitConfig.RequiresMountsFor = [storage];
-      # Imports and subtitles must remain writable by the other media services.
-      serviceConfig.UMask = lib.mkForce "0002";
-    });
+    services = lib.mkMerge [
+      (lib.genAttrs mediaWriters (_: {
+        unitConfig.RequiresMountsFor = [storage];
+        # Imports and subtitles must remain writable by the other media services.
+        serviceConfig.UMask = lib.mkForce "0002";
+      }))
+      {
+        # Prowlarr uses the local API; this service needs no public endpoint.
+        flaresolverr = lib.mkIf cfg.flaresolverr.enable {
+          environment.HOST = "127.0.0.1";
+        };
+      }
+    ];
     tmpfiles.rules = lib.optionals (mediaWriters != []) (
       lib.optional (!config.custom.media) "d ${library} 2775 root media -"
       ++ [
