@@ -1,6 +1,7 @@
-{ ... }: {
+{...}: {
   imports = [
     ./hardware-configuration.nix
+    ../../modules/qbittorrent-vpn.nix
   ];
 
   # Bootloader.

@@ -57,6 +57,53 @@ Secrets are encrypted in `secrets/secrets.yaml` with SOPS. Recipient policy is d
 
 When configuration needs a new secret, add or review the non-secret SOPS wiring separately, determine the expected key name and value format, generate or retrieve the value outside the agent workflow, and then edit the encrypted file manually with SOPS.
 
+## qBittorrent through Proton VPN
+
+The Zenbook configuration includes qBittorrent in the `qbittorrent` network namespace.
+Its WireGuard interface is the only internet route; a filtered veth link permits
+only replies to host-initiated Web UI requests. DNS uses Proton's `10.2.0.1` inside
+the namespace. IPv6 is disabled there because this Proton configuration supplies
+only an IPv4 address. Host routing and DNS are unchanged.
+
+The owner-managed SOPS key `wg_zenbook_proton_qbittorrent_dk` must contain the full
+WireGuard configuration, including its private key. This module expects the
+provided `Address = 10.2.0.2/32` and `DNS = 10.2.0.1`; changes to those values
+require corresponding module changes. Select a Proton P2P server with NAT-PMP
+enabled. The configuration is stripped and loaded at runtime, never embedded in
+the Nix store. WireGuard configuration hooks are not executed.
+
+After deployment, point `qbittorrent.internal.bliztle.com` at `10.0.0.8` in LAN
+DNS (or a client hosts file), then open `http://qbittorrent.internal.bliztle.com`.
+nginx restricts access to `10.0.0.0/24`. Log in as `admin` using the temporary
+password from `sudo journalctl -u qbittorrent.service`, then set a password in the
+Web UI. Passwords and other user settings persist across restarts. Only loopback
+inside the namespace bypasses authentication for the port-forwarding helper;
+nginx's connection does not. The Web UI is blocked on the VPN interface.
+
+Downloads default to `/mnt/hdd_storage_01/media/downloads` with media-group access.
+`qbittorrent-port-forward.service` renews Proton's TCP and UDP mappings and updates
+qBittorrent's listening port automatically, including after port changes. Keep
+qBittorrent's own UPnP/NAT-PMP option disabled; no home-router forwarding is needed.
+Lease failures are retried and logged, and may interrupt inbound connectivity;
+they do not create a route outside the VPN.
+
+For owner-run post-deployment checks:
+
+```bash
+sudo systemctl status qbittorrent-vpn qbittorrent qbittorrent-port-forward
+sudo journalctl -u qbittorrent-port-forward -n 30
+sudo ip -n qbittorrent route
+sudo ip netns exec qbittorrent nft list ruleset
+```
+
+Check the namespace's public IP against the host's using an HTTP client with
+`sudo ip netns exec qbittorrent`; it should be Proton's exit IP. To test the kill
+switch, bring `qbt-wg` down inside that namespace and confirm internet requests and
+torrents fail while other host services remain reachable, then bring it up again.
+Restarting `qbittorrent-vpn` also recreates the namespace and restarts its dependent
+services. Local evaluations do not verify the remote handshake, inbound peer
+reachability, or activation; those require post-deployment checks.
+
 ## Known issues and debt
 
 This is a living register, not a claim that every item should be fixed immediately. Changes that resolve an item should update or remove it here; newly confirmed out-of-scope findings should be added without silently fixing them.
