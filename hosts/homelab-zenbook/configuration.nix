@@ -14,11 +14,19 @@
   custom.laptop = true;
   custom.media = true;
 
-  # Uni Parking. This just needs to run on some host
-  services.apcoabot = {
-    enable = true;
-    startTime = "07:45";
-    configFile = "/run/secrets/apcoa_json";
+  services = {
+    radarr.enable = true;
+    sonarr.enable = true;
+    prowlarr.enable = true;
+    bazarr.enable = true;
+    seerr.enable = true;
+
+    # Uni Parking. This just needs to run on some host
+    apcoabot = {
+      enable = true;
+      startTime = "07:45";
+      configFile = "/run/secrets/apcoa_json";
+    };
   };
 
   # This value determines the NixOS release from which the default

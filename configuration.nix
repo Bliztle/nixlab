@@ -12,6 +12,7 @@
     ./modules/shell.nix
     ./modules/laptop.nix
     ./modules/services.nix
+    ./modules/media-automation.nix
     ./modules/wireguard.nix
   ];
 

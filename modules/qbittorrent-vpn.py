@@ -25,7 +25,7 @@ def configure(filename, downloads):
         "WebUI\\LocalHostAuth": "false",
         "WebUI\\AuthSubnetWhitelistEnabled": "false",
         "WebUI\\HostHeaderValidation": "true",
-        "WebUI\\ServerDomains": "qbittorrent.internal.bliztle.com;localhost;127.0.0.1",
+        "WebUI\\ServerDomains": "qbittorrent.internal.bliztle.com;localhost;127.0.0.1;10.200.200.2",
         "Connection\\UPnP": "false",
     }.items():
         config.set("Preferences", key, value)

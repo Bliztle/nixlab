@@ -104,12 +104,83 @@ Restarting `qbittorrent-vpn` also recreates the namespace and restarts its depen
 services. Local evaluations do not verify the remote handshake, inbound peer
 reachability, or activation; those require post-deployment checks.
 
+## Media automation
+
+Radarr, Sonarr, Prowlarr, Bazarr, and Seerr are enabled on the Zenbook using their
+native NixOS options. Each can be enabled or disabled independently in the host
+configuration:
+
+```nix
+services.radarr.enable = true;
+services.sonarr.enable = true;
+services.prowlarr.enable = true;
+services.bazarr.enable = true;
+services.seerr.enable = true;
+```
+
+`modules/media-automation.nix` adds storage permissions and an nginx virtual host
+only for enabled services. These services use the host's normal internet
+connection. Only qBittorrent is inside the VPN namespace. The Pi leaves all five
+disabled.
+
+Point these names at `10.0.0.8` in LAN DNS or a client hosts file. Open them over
+HTTP; nginx allows only `10.0.0.0/24`. Backend ports are not opened in the firewall.
+Radarr, Sonarr, and Prowlarr additionally bind to loopback.
+
+| Service | LAN Web UI | Local API address |
+| --- | --- | --- |
+| Radarr | `http://radarr.internal.bliztle.com` | `http://127.0.0.1:7878` |
+| Sonarr | `http://sonarr.internal.bliztle.com` | `http://127.0.0.1:8989` |
+| Prowlarr | `http://prowlarr.internal.bliztle.com` | `http://127.0.0.1:9696` |
+| Bazarr | `http://bazarr.internal.bliztle.com` | `http://127.0.0.1:6767` |
+| Seerr | `http://seerr.internal.bliztle.com` | `http://127.0.0.1:5055` |
+
+After deployment, complete the apps' initial setup and authentication in their
+Web UIs. Configure the connections below manually; API keys, provider credentials,
+and qBittorrent credentials belong in the apps' private state, not Nix expressions.
+
+1. In Radarr, use `/mnt/hdd_storage_01/media/media/movies` as the root folder; in
+   Sonarr, use `/mnt/hdd_storage_01/media/media/tv`. Add qBittorrent as a download
+   client in each with host `10.200.200.2`, port `8080`, SSL off, and your qBittorrent
+   username/password. Use separate `radarr` and `sonarr` categories. No remote path
+   mapping is needed: all services see the same filesystem paths.
+2. In Prowlarr, add your indexers and add Radarr/Sonarr under Settings → Apps using
+   the local API addresses above and their API keys. Use `http://127.0.0.1:9696`
+   for Prowlarr's own server URL in these connections.
+3. In Bazarr, connect to Radarr/Sonarr on `127.0.0.1` and their respective ports
+   with their API keys, then configure subtitle providers and language profiles.
+4. In Seerr, connect to Jellyfin at `http://127.0.0.1:8096`, and Radarr/Sonarr at
+   their local API addresses. Select the root folders and quality profiles you
+   configured above. Add the movies/TV folders as Jellyfin libraries if needed.
+
+Radarr, Sonarr, Bazarr, and qBittorrent share the `media` group. New movie/TV
+directories use mode `2775`, and media writers use umask `0002` to support imports,
+hardlinks, and subtitle writes. Downloads and libraries are on the same HDD
+filesystem. Existing file permissions are not changed recursively; files moved
+into these directories must already grant the media group the access they need.
+
+Application databases/configuration remain under their default `/var/lib`
+directories. Seerr uses its current `/var/lib/seerr` layout (`stateRevision = 1`);
+the host's `system.stateVersion` is unchanged. Back up application state as well
+as media. Service enablement is declarative; indexers, libraries, profiles, and
+connections are managed in the apps.
+
+Owner-run checks after deployment:
+
+```bash
+sudo systemctl status radarr sonarr prowlarr bazarr seerr
+```
+
+Use each app's connection-test buttons to verify the integrations, then test a
+download/import and a subtitle write. Local evaluation cannot verify these live
+connections or provider credentials.
+
 ## Known issues and debt
 
 This is a living register, not a claim that every item should be fixed immediately. Changes that resolve an item should update or remove it here; newly confirmed out-of-scope findings should be added without silently fixing them.
 
 - `nix flake check` warns that the deploy-rs `deploy` output is unknown to the generic flake checker.
-- Alejandra currently reports formatting changes needed in five files: `configuration.nix`, `options.nix`, `modules/neovim.nix`, `modules/wireguard.nix`, and the Pi hardware configuration.
+- Alejandra currently reports formatting changes needed in seven files: `configuration.nix`, `flake.nix`, `options.nix`, `modules/neovim.nix`, `modules/services.nix`, `modules/wireguard.nix`, and the Pi hardware configuration.
 - Statix reports existing style warnings, primarily repeated dotted attribute keys and empty argument patterns.
 - Deadnix reports unused arguments in the inactive WireGuard module and the generated Pi hardware configuration.
 - `custom.wireguard = true` on the Pi currently has no effect because the WireGuard implementation is commented out.
