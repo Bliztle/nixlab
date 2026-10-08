@@ -2,6 +2,7 @@
   imports = [
     ./hardware-configuration.nix
     ../../modules/qbittorrent-vpn.nix
+    ../../modules/teamtype.nix
   ];
 
   # Bootloader.

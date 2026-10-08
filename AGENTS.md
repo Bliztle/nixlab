@@ -244,6 +244,76 @@ connectivity, but does not guarantee every indexer's challenge can be solved.
 See the [Prowlarr proxy documentation](https://wiki.servarr.com/prowlarr/settings#indexer-proxies)
 and [FlareSolverr documentation](https://github.com/FlareSolverr/FlareSolverr).
 
+### Teamtype for uni/specialization
+
+The Zenbook imports `modules/teamtype.nix`, which enables
+`teamtype-specialization.service` as an always-online Teamtype peer. The Pi does
+not import it. Teamtype comes from the existing pinned nixpkgs (currently 0.9.2).
+No dependency update or deployment is needed to prepare this configuration.
+
+The dedicated `teamtype` user owns `/var/lib/teamtype-specialization` (mode 0700).
+The shared project is its `project/` subdirectory; it starts empty. Teamtype
+creates its identity in `project/.teamtype/key` on first service start and keeps
+document history in `project/.teamtype/doc`. Preserve the entire state directory
+when backing up or migrating, including hidden files. No SOPS entry is required
+for this application-managed identity. Never copy it into this public repository.
+
+The service uses the host's normal internet connection and Teamtype's default
+Iroh relays/discovery. It does not host a relay, need nginx/DNS records, or open
+an inbound firewall port. Direct connections are attempted where possible, with
+relay fallback. `--no-join-code` avoids the Magic Wormhole pairing service;
+clients instead use a persistent secret address. This is not a fully independent
+networking deployment: public Iroh infrastructure remains a dependency.
+
+After the owner deploys, run on the server:
+
+```bash
+sudo systemctl status teamtype-specialization
+sudo cat /var/lib/teamtype-specialization/session.log
+```
+
+The log contains the secret address printed at startup. Treat it as an invitation
+granting read/write access and share it privately with collaborators. Output stays
+in this private file outside the synchronized project, not in the journal. The
+file is replaced on service restart; it also contains runtime diagnostics. The
+main process opens it after systemd creates the state directory. Do not use
+`StandardOutput=truncate:` for this path: on first startup it is opened before
+the directory exists, causing `209/STDOUT` even for `ExecStartPre`. Pre-start
+diagnostics remain in the journal; they contain no invitation. The
+address remains stable while `project/.teamtype/key` is preserved. Do not start a
+second daemon on the server's project directory: the unit removes a stale socket
+before startup to recover unattended after a crash.
+
+On each client, install a matching Teamtype version and the
+[Neovim plugin or VS Code extension](https://github.com/teamtype/teamtype#-installation).
+Make sure `teamtype` is in the editor's PATH. For an empty local project directory:
+
+```bash
+mkdir -p ~/uni/specialization/.teamtype
+chmod 700 ~/uni/specialization/.teamtype
+cd ~/uni/specialization
+```
+
+Using a local editor, create `.teamtype/config` containing `peer=SECRET_ADDRESS`,
+replacing the placeholder with the private address from the server. Set that
+file's permissions to 0600, then run `teamtype join` in this directory and keep it
+running while editing. Subsequent sessions also use `teamtype join` without a code.
+Join from an empty directory first, then copy the initial project files into one
+connected client directory. Other connected devices and the server receive them.
+
+For this persistent workflow, do not configure a Git remote in the shared
+directory: Teamtype 0.9.2 disables persistent CRDT history when it detects one.
+Git metadata is excluded by default; `--sync-vcs` is intentionally not enabled.
+Keep `.teamtype/` out of version control. Clients on Windows need WSL. Restarting
+a local daemon may require reopening the editor to reconnect its plugin.
+
+After deployment, verify simultaneous edits and cursors between Neovim and VS
+Code, then reconnect a client and confirm its edits persist. Test a service
+restart to confirm clients can reconnect with the same address. Local Nix
+evaluations do not prove network connectivity, relay availability, or editor
+interoperability. See upstream's [permanent-peer guide](https://teamtype.github.io/teamtype/shared-notes.html)
+and [offline/Git limitations](https://teamtype.github.io/teamtype/offline-support.html).
+
 ## Known issues and debt
 
 This is a living register, not a claim that every item should be fixed immediately. Changes that resolve an item should update or remove it here; newly confirmed out-of-scope findings should be added without silently fixing them.
