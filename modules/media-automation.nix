@@ -10,7 +10,7 @@
     radarr = cfg.radarr.settings.server.port;
     sonarr = cfg.sonarr.settings.server.port;
     prowlarr = cfg.prowlarr.settings.server.port;
-    bazarr = cfg.bazarr.listenPort;
+    bazarr = cfg.bazarr.settings.general.port;
     seerr = cfg.seerr.port;
   };
   enabled = lib.filterAttrs (name: _: cfg.${name}.enable) ports;
